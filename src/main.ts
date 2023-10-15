@@ -6,6 +6,9 @@ const gameName = "Paint";
 
 document.title = gameName;
 
+const canvasWidth = 256;
+const canvasHeight = 256;
+
 const container = document.createElement("div");
 app.append(container);
 
@@ -14,8 +17,8 @@ header.innerHTML = gameName;
 container.append(header);
 
 const canvas = document.createElement("canvas");
-canvas.width = 256;
-canvas.height = 256;
+canvas.width = canvasWidth;
+canvas.height = canvasHeight;
 container.append(canvas);
 
 const ctx = canvas.getContext("2d");
