@@ -73,7 +73,7 @@ canvas.addEventListener("mouseup", () => {
 function redraw() {
   if (ctx) {
     // ctx null check
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(nothing, nothing, canvas.width, canvas.height);
     for (const line of lines) {
       if (line.length > one) {
         ctx.beginPath();
