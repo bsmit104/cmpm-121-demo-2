@@ -6,6 +6,7 @@ const gameName = "Paint";
 
 document.title = gameName;
 
+// no magic numbers *eyebrow raise*
 const canvasWidth = 256;
 const canvasHeight = 256;
 const nothing = 0;
@@ -106,9 +107,10 @@ undoButton.innerHTML = "undo";
 container.append(undoButton);
 
 undoButton.addEventListener("click", () => {
-  if (lines.length > nothing) {
+  if (lines.length > 0) {
     const poppedLine = lines.pop();
     if (poppedLine) {
+      // popped line to the redo stack
       redoLines.push(poppedLine);
       redraw();
 
@@ -122,9 +124,10 @@ redoButton.innerHTML = "redo";
 container.append(redoButton);
 
 redoButton.addEventListener("click", () => {
-  if (redoLines.length > nothing) {
+  if (redoLines.length > 0) {
     const poppedRedoLine = redoLines.pop();
     if (poppedRedoLine) {
+      // popped redo line to the display list
       lines.push(poppedRedoLine);
       redraw();
 
@@ -133,7 +136,7 @@ redoButton.addEventListener("click", () => {
   }
 });
 
-// Add an observer for the "drawing-changed" event to clear and redraw lines
+// observer for the "drawing-changed" event
 canvasEventTarget.addEventListener("drawing-changed", () => {
   redraw();
 });
