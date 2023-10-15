@@ -9,6 +9,7 @@ document.title = gameName;
 const canvasWidth = 256;
 const canvasHeight = 256;
 const nothing = 0;
+const one = 1;
 
 const container = document.createElement("div");
 app.append(container);
@@ -74,9 +75,9 @@ function redraw() {
     // ctx null check
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (const line of lines) {
-      if (line.length > 1) {
+      if (line.length > one) {
         ctx.beginPath();
-        const { x, y } = line[0];
+        const { x, y } = line[nothing];
         ctx.moveTo(x, y);
         for (const { x, y } of line) {
           ctx.lineTo(x, y);
@@ -94,7 +95,7 @@ clearButton.innerHTML = "clear";
 container.append(clearButton);
 
 clearButton.addEventListener("click", () => {
-  lines.splice(0, lines.length);
+  lines.splice(nothing, lines.length);
   redraw();
 
   canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
