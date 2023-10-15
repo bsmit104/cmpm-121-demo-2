@@ -8,6 +8,7 @@ document.title = gameName;
 
 const canvasWidth = 256;
 const canvasHeight = 256;
+const nothing = 0;
 
 const container = document.createElement("div");
 app.append(container);
@@ -39,7 +40,7 @@ canvas.addEventListener("mousedown", (e) => {
 
   currentLine = [];
   lines.push(currentLine);
-  redoLines.splice(0, redoLines.length);
+  redoLines.splice(nothing, redoLines.length);
   currentLine.push({ x: cursor.x, y: cursor.y });
 
   redraw();
@@ -104,7 +105,7 @@ undoButton.innerHTML = "undo";
 container.append(undoButton);
 
 undoButton.addEventListener("click", () => {
-  if (lines.length > 0) {
+  if (lines.length > nothing) {
     const poppedLine = lines.pop();
     if (poppedLine) {
       redoLines.push(poppedLine);
@@ -120,7 +121,7 @@ redoButton.innerHTML = "redo";
 container.append(redoButton);
 
 redoButton.addEventListener("click", () => {
-  if (redoLines.length > 0) {
+  if (redoLines.length > nothing) {
     const poppedRedoLine = redoLines.pop();
     if (poppedRedoLine) {
       lines.push(poppedRedoLine);
