@@ -22,8 +22,8 @@ a {
 
 canvas {
   display: block;
-  margin: 0 auto;
-  border: 1px solid black;
+  margin-bottom: 20px;
+  border: 8px solid black;
   border-radius: 10px;
   box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
 }
@@ -65,7 +65,7 @@ button {
 }
 
 button:hover {
-  border-color: #646cff;
+  border-color: #0d148f;
 }
 
 button:focus,
@@ -75,7 +75,7 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
+    color: #153e91;
     background-color: #ffffff;
   }
 
@@ -84,6 +84,6 @@ button:focus-visible {
   }
 
   button {
-    background-color: #f9f9f9;
+    background-color: #f2889d;
   }
 }
