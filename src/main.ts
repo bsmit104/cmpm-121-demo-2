@@ -27,6 +27,8 @@ const canvas = document.createElement("canvas");
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 container.append(canvas);
+canvas.style.cursor = "none";
+// let cursorCommand = null;
 
 let currentTool = "thin"; // set default to thin
 
@@ -60,12 +62,36 @@ class MarkerLine {
   }
 }
 
+// class CursorCommand {
+//   constructor(x, y) {
+//     this.x = x;
+//     this.y = y;
+//   }
+//   execute() {
+//     if (ctx) {
+//       ctx.font = "32px monospace";
+//       ctx.fillText("*", this.x - 8, this.y + 16);
+//     }
+//   }
+// }
+
+
 // lines created w marker line class
 const lines: MarkerLine[] = [];
 const redoLines: MarkerLine[] = [];
 let currentLine: MarkerLine | null = null;
 const cursor = { active: false, x: 0, y: 0 };
 const canvasEventTarget = new EventTarget();
+
+// canvas.addEventListener("mouseout", (e) => {
+//   cursorCommand = null;
+//   canvasEventTarget.dispatchEvent(new Event("cursor-changed"));
+// });
+
+// canvas.addEventListener("mouseenter", (e) => {
+//   cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+//   canvasEventTarget.dispatchEvent(new Event("cursor-changed"));
+// });
 
 canvas.addEventListener("mousedown", (e) => {
   cursor.active = true;
@@ -89,6 +115,11 @@ canvas.addEventListener("mousedown", (e) => {
 });
 
 canvas.addEventListener("mousemove", (e) => {
+  // "tool-moved" event
+  cursor.active = true;
+  cursor.x = e.offsetX;
+  cursor.y = e.offsetY;
+  canvasEventTarget.dispatchEvent(new CustomEvent("tool-moved", { detail: { x: cursor.x, y: cursor.y } }));
   if (cursor.active && currentLine) {
     cursor.x = e.offsetX;
     cursor.y = e.offsetY;
@@ -117,6 +148,9 @@ function redraw() {
       line.display(ctx);
     }
   }
+  // if (cursorCommand) {
+  //   cursorCommand.execute();
+  // }
 }
 
 document.body.append(document.createElement("br"));

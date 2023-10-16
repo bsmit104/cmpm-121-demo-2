@@ -14,6 +14,10 @@
   -webkit-text-size-adjust: 100%;
 }
 
+body {
+  background-color: rgb(245, 161, 82);
+}
+
 a {
   font-weight: 500;
   color: #646cff;
@@ -21,6 +25,7 @@ a {
 }
 
 canvas {
+  background-color: rgb(255, 255, 255);
   display: block;
   margin-bottom: 20px;
   border: 8px solid black;
