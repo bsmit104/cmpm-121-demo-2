@@ -85,5 +85,7 @@ button:focus-visible {
 
   button {
     background-color: #f2889d;
+    border: 2px solid black;
+    border-radius: 10px;
   }
 }
