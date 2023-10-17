@@ -34,6 +34,12 @@ let currentTool = "thin"; // set default to thin
 
 const ctx = canvas.getContext("2d");
 
+// heres a drawing-changed observer
+const bus = new EventTarget();
+bus.addEventListener("drawing-changed", () => {
+  redraw();
+});
+
 // marker line class
 class MarkerLine {
   private points: { x: number; y: number }[];
@@ -109,7 +115,7 @@ canvas.addEventListener("mousedown", (e) => {
   lines.push(currentLine);
   redoLines.length = nothing;
   currentLine.drag(cursor.x, cursor.y);
-  redraw();
+  //redraw();
 
   canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
 });
