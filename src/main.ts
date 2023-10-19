@@ -28,15 +28,33 @@ canvas.width = canvasWidth;
 canvas.height = canvasHeight;
 container.append(canvas);
 canvas.style.cursor = "none";
-// let cursorCommand = null;
+
+//let cursorCommand: CursorCommand | null = null;
 
 let currentTool = "thin"; // set default to thin
 
 const ctx = canvas.getContext("2d");
 
+// lines created w marker line class
+const lines: MarkerLine[] = [];
+const redoLines: MarkerLine[] = [];
+// let currentLine: MarkerLine | null = null;
+// const cursor = { active: false, x: 0, y: 0 };
+// const canvasEventTarget = new EventTarget();
+
+function notify(name: string) {
+  bus.dispatchEvent(new Event(name));
+}
+
+let cursorCommand: CursorCommand | null = null;
+
 // heres a drawing-changed observer
 const bus = new EventTarget();
 bus.addEventListener("drawing-changed", () => {
+  redraw();
+});
+
+bus.addEventListener("tool-changed", () => {
   redraw();
 });
 
@@ -54,109 +72,102 @@ class MarkerLine {
     this.points.push({ x, y });
   }
 
-  display(context: CanvasRenderingContext2D) {
+  display(ctx: CanvasRenderingContext2D) {
     if (this.points.length > one) {
-      context.beginPath();
-      context.lineWidth = this.lineWidth;
-      const { x, y } = this.points[nothing];
-      context.moveTo(x, y);
-      for (const { x, y } of this.points) {
-        context.lineTo(x, y);
+      if (ctx) {
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = this.lineWidth;
+        ctx.beginPath();
+        const { x, y } = this.points[0];
+        ctx.moveTo(x, y);
+        for (const { x, y } of this.points) {
+          ctx.lineTo(x, y);
+        }
+        ctx.stroke();
       }
-      context.stroke();
     }
   }
 }
 
-// class CursorCommand {
-//   constructor(x, y) {
-//     this.x = x;
-//     this.y = y;
-//   }
-//   execute() {
-//     if (ctx) {
-//       ctx.font = "32px monospace";
-//       ctx.fillText("*", this.x - 8, this.y + 16);
-//     }
-//   }
-// }
+class CursorCommand {
+  x: number;
+  y: number;
+  constructor(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+  execute(ctx: CanvasRenderingContext2D) {
+    if (ctx) {
+      if (lineSize === bigStroke) {
+        // Use a larger font size for the asterisk when using the "thick" tool
+        ctx.font = "30px monospace"; // Adjust the size as needed
+      } else {
+        // Use a smaller font size for the asterisk when using the "thin" tool
+        ctx.font = "10px monospace"; // Adjust the size as needed
+      }
+      ctx.fillText("*", this.x - 8, this.y + 16);
+    }
+  }
+}
 
-
-// lines created w marker line class
-const lines: MarkerLine[] = [];
-const redoLines: MarkerLine[] = [];
 let currentLine: MarkerLine | null = null;
-const cursor = { active: false, x: 0, y: 0 };
-const canvasEventTarget = new EventTarget();
 
-// canvas.addEventListener("mouseout", (e) => {
-//   cursorCommand = null;
-//   canvasEventTarget.dispatchEvent(new Event("cursor-changed"));
-// });
+canvas.addEventListener("mouseout", () => {
+  cursorCommand = null;
+  notify("tool-changed");
+});
 
-// canvas.addEventListener("mouseenter", (e) => {
-//   cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
-//   canvasEventTarget.dispatchEvent(new Event("cursor-changed"));
-// });
+canvas.addEventListener("mouseenter", (e) => {
+  // Create the cursorCommand when the mouse enters the canvas
+  cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+  notify("tool-moved");
+});
+
+canvas.addEventListener("mousemove", (e) => {
+  // Update the cursorCommand position
+  cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+  notify("tool-changed");
+  // "tool-moved" event
+  //canvasEventTarget.dispatchEvent(new CustomEvent("tool-moved", { detail: { x: cursor.x, y: cursor.y } }));
+
+  if (e.buttons == 1 && currentLine) {
+    cursorCommand = null; //remove when draw
+    currentLine.drag(e.offsetX, e.offsetY);
+    redraw();
+    notify("drawing-changed");
+  }
+});
 
 canvas.addEventListener("mousedown", (e) => {
-  cursor.active = true;
-  cursor.x = e.offsetX;
-  cursor.y = e.offsetY;
-
   // set line size
+  cursorCommand = null; //remove when draw
   if (currentTool === "thin") {
     lineSize = smallStroke;
   } else {
     lineSize = bigStroke;
   }
-
-  currentLine = new MarkerLine({ x: cursor.x, y: cursor.y }, lineSize);
+  currentLine = new MarkerLine({ x: e.offsetX, y: e.offsetY }, lineSize);
   lines.push(currentLine);
   redoLines.length = nothing;
-  currentLine.drag(cursor.x, cursor.y);
-  //redraw();
-
-  canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
-});
-
-canvas.addEventListener("mousemove", (e) => {
-  // "tool-moved" event
-  cursor.active = true;
-  cursor.x = e.offsetX;
-  cursor.y = e.offsetY;
-  canvasEventTarget.dispatchEvent(new CustomEvent("tool-moved", { detail: { x: cursor.x, y: cursor.y } }));
-  if (cursor.active && currentLine) {
-    cursor.x = e.offsetX;
-    cursor.y = e.offsetY;
-    currentLine.drag(cursor.x, cursor.y);
-
-    redraw();
-
-    canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
-  }
+  //currentLine.drag(cursor.x, cursor.y);
+  notify("drawing-changed");
 });
 
 canvas.addEventListener("mouseup", () => {
-  cursor.active = false;
   currentLine = null;
-
-  redraw();
-
-  canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
+  // redraw();
+  notify("drawing-changed");
 });
 
 function redraw() {
   // ctx null check
   if (ctx) {
     ctx.clearRect(nothing, nothing, canvas.width, canvas.height);
-    for (const line of lines) {
-      line.display(ctx);
+    lines.forEach((line) => line.display(ctx));
+    if (cursorCommand) {
+      cursorCommand.execute(ctx);
     }
   }
-  // if (cursorCommand) {
-  //   cursorCommand.execute();
-  // }
 }
 
 document.body.append(document.createElement("br"));
@@ -168,9 +179,8 @@ container.append(clearButton);
 
 clearButton.addEventListener("click", () => {
   lines.length = nothing;
-  redraw();
-
-  canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
+  redraw(); //potentially delete
+  notify("drawing-changed");
 });
 
 // undo button
@@ -185,9 +195,8 @@ undoButton.addEventListener("click", () => {
     // empty stack check
     if (poppedLine) {
       redoLines.push(poppedLine);
-      redraw();
-
-      canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
+      redraw(); //cld delete
+      notify("drawing-changed");
     }
   }
 });
@@ -205,8 +214,7 @@ redoButton.addEventListener("click", () => {
     if (poppedRedoLine) {
       lines.push(poppedRedoLine);
       redraw();
-
-      canvasEventTarget.dispatchEvent(new Event("drawing-changed"));
+      notify("drawing-changed");
     }
   }
 });
@@ -227,10 +235,18 @@ thinToolButton.addEventListener("click", () => {
   currentTool = "thin";
   thinToolButton.classList.add("selectedTool");
   thickToolButton.classList.remove("selectedTool");
+  // if (ctx) {
+  //   ctx.font = "10px monospace";
+  //   ctx.fillText("*", this.x - 8, this.y + 16);
+  // }
 });
 
 thickToolButton.addEventListener("click", () => {
   currentTool = "thick";
   thickToolButton.classList.add("selectedTool");
   thinToolButton.classList.remove("selectedTool");
+  // if (ctx) {
+  //   ctx.font = "30px monospace";
+  //   ctx.fillText("*", this.x - 8, this.y + 16);
+  // }
 });
