@@ -125,12 +125,12 @@ class MarkerLine {
   }
 
   display(ctx: CanvasRenderingContext2D) {
-    if (this.points.length > 1) {
+    if (this.points.length > one) {
       if (ctx) {
         ctx.strokeStyle = this.lineColor;
         ctx.lineWidth = this.lineWidth;
         ctx.beginPath();
-        const { x, y } = this.points[0];
+        const { x, y } = this.points[zero];
         ctx.moveTo(x, y);
         for (const { x, y } of this.points) {
           ctx.lineTo(x, y);
@@ -140,36 +140,6 @@ class MarkerLine {
     }
   }
 }
-
-// class MarkerLine {
-//   private points: { x: number; y: number }[];
-//   private lineWidth: number;
-
-//   constructor(initialPosition: { x: number; y: number }, lineWidth: number) {
-//     this.points = [initialPosition];
-//     this.lineWidth = lineWidth;
-//   }
-
-//   drag(x: number, y: number) {
-//     this.points.push({ x, y });
-//   }
-
-//   display(ctx: CanvasRenderingContext2D) {
-//     if (this.points.length > one) {
-//       if (ctx) {
-//         ctx.strokeStyle = "black";
-//         ctx.lineWidth = this.lineWidth;
-//         ctx.beginPath();
-//         const { x, y } = this.points[zero];
-//         ctx.moveTo(x, y);
-//         for (const { x, y } of this.points) {
-//           ctx.lineTo(x, y);
-//         }
-//         ctx.stroke();
-//       }
-//     }
-//   }
-// }
 
 class CursorCommand {
   x: number;
