@@ -49,9 +49,6 @@ const ctx = canvas.getContext("2d");
 // lines created w marker line class
 const lines: (MarkerLine | StickerCommand)[] = [];
 const redoLines: (MarkerLine | StickerCommand)[] = [];
-// let currentLine: MarkerLine | null = null;
-// const cursor = { active: false, x: 0, y: 0 };
-// const canvasEventTarget = new EventTarget();
 
 function notify(name: string) {
   bus.dispatchEvent(new Event(name));
@@ -257,27 +254,6 @@ canvas.addEventListener("mousedown", (e) => {
   notify("drawing-changed");
 });
 
-// canvas.addEventListener("mousedown", (e) => {
-//   // set line size
-//   // if (cursorCommand && cursorCommand.s) {
-//     if (cursorCommand && cursorCommand.s) {
-//       currentSticker = new StickerCommand(e.offsetX, e.offsetY, cursorCommand.s);
-//     } else {
-//       cursorCommand = null; //remove when draw
-//       if (currentTool === "thin") {
-//         lineSize = smallStroke;
-//       } else {
-//         lineSize = bigStroke;
-//       }
-//     currentLine = new MarkerLine({ x: e.offsetX, y: e.offsetY }, lineSize);
-//       currentSticker = null;
-//     }
-//   lines.push(currentLine);
-//   redoLines.length = nothing;
-//   //currentLine.drag(cursor.x, cursor.y);
-//   notify("drawing-changed");
-// });
-
 canvas.addEventListener("mouseup", () => {
   // currentLine = null;
   // redraw();
@@ -301,7 +277,6 @@ function redraw() {
         line.display(ctx);
       }
     });
-    // lines.forEach((line) => line.display(ctx));
     if (cursorCommand) {
       cursorCommand.execute(ctx);
     }
@@ -372,20 +347,12 @@ thinToolButton.addEventListener("click", () => {
   currentTool = "thin";
   thinToolButton.classList.add("selectedTool");
   thickToolButton.classList.remove("selectedTool");
-  // if (ctx) {
-  //   ctx.font = "10px monospace";
-  //   ctx.fillText("*", this.x - 8, this.y + 16);
-  // }
 });
 
 thickToolButton.addEventListener("click", () => {
   currentTool = "thick";
   thickToolButton.classList.add("selectedTool");
   thinToolButton.classList.remove("selectedTool");
-  // if (ctx) {
-  //   ctx.font = "30px monospace";
-  //   ctx.fillText("*", this.x - 8, this.y + 16);
-  // }
 });
 
 // container 3 so buttons are below other buttons
@@ -508,3 +475,5 @@ exportButton.innerHTML = "Export";
 container2.append(exportButton);
 
 exportButton.addEventListener("click", exportCanvas);
+
+/////////////////inspo from Adam Smith's https://glitch.com/edit/#!/shoddy-paint?path=paint1.html%3A19%3A0//////////////////
