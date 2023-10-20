@@ -71,27 +71,66 @@ bus.addEventListener("tool-changed", () => {
   redraw();
 });
 
+const colorPicker = document.createElement("input");
+colorPicker.type = "color";
+colorPicker.value = "#000000"; // Set the default color
+container0.appendChild(colorPicker);
+
+colorPicker.addEventListener("input", (e: Event) => {
+  if (e.target instanceof HTMLInputElement) {
+    const selectedColor = e.target.value;
+    updateLineColor(selectedColor);
+  }
+});
+
+function updateLineColor(color: string) {
+  if (currentTool === "thin" && currentLine instanceof MarkerLine) {
+    currentLine.setLineColor(color);
+  } else if (currentTool === "thick" && currentLine instanceof MarkerLine) {
+    currentLine.setLineColor(color);
+  }
+}
 // marker line class
+// Update the MarkerLine class to store and use the line color
+let selectedColor = "#000000"; 
+
+colorPicker.addEventListener("input", (e: Event) => {
+  if (e.target instanceof HTMLInputElement) {
+    selectedColor = e.target.value; // Update the selected color
+  }
+});
 class MarkerLine {
   private points: { x: number; y: number }[];
   private lineWidth: number;
+  private lineColor: string;
+  private originalColor: string;
 
-  constructor(initialPosition: { x: number; y: number }, lineWidth: number) {
+  constructor(initialPosition: { x: number; y: number }, lineWidth: number, lineColor: string) {
     this.points = [initialPosition];
     this.lineWidth = lineWidth;
+    this.lineColor = lineColor;
+    this.originalColor = lineColor;
   }
 
   drag(x: number, y: number) {
     this.points.push({ x, y });
   }
 
+  setLineColor(color: string) {
+    this.lineColor = color;
+  }
+
+  resetToOriginalColor() {
+    this.lineColor = this.originalColor;
+  }
+
   display(ctx: CanvasRenderingContext2D) {
-    if (this.points.length > one) {
+    if (this.points.length > 1) {
       if (ctx) {
-        ctx.strokeStyle = "black";
+        ctx.strokeStyle = this.lineColor;
         ctx.lineWidth = this.lineWidth;
         ctx.beginPath();
-        const { x, y } = this.points[zero];
+        const { x, y } = this.points[0];
         ctx.moveTo(x, y);
         for (const { x, y } of this.points) {
           ctx.lineTo(x, y);
@@ -101,6 +140,36 @@ class MarkerLine {
     }
   }
 }
+
+// class MarkerLine {
+//   private points: { x: number; y: number }[];
+//   private lineWidth: number;
+
+//   constructor(initialPosition: { x: number; y: number }, lineWidth: number) {
+//     this.points = [initialPosition];
+//     this.lineWidth = lineWidth;
+//   }
+
+//   drag(x: number, y: number) {
+//     this.points.push({ x, y });
+//   }
+
+//   display(ctx: CanvasRenderingContext2D) {
+//     if (this.points.length > one) {
+//       if (ctx) {
+//         ctx.strokeStyle = "black";
+//         ctx.lineWidth = this.lineWidth;
+//         ctx.beginPath();
+//         const { x, y } = this.points[zero];
+//         ctx.moveTo(x, y);
+//         for (const { x, y } of this.points) {
+//           ctx.lineTo(x, y);
+//         }
+//         ctx.stroke();
+//       }
+//     }
+//   }
+// }
 
 class CursorCommand {
   x: number;
@@ -159,7 +228,7 @@ class StickerCommand {
 }
 
 //let currentLine: MarkerLine | StickerCommand | null = null;
-let currentLine: MarkerLine | StickerCommand = new MarkerLine({ x: 0, y: 0 }, zero);
+let currentLine: MarkerLine | StickerCommand = new MarkerLine({ x: 0, y: 0 }, zero, "");
 
 canvas.addEventListener("mouseout", () => {
   cursorCommand = null;
@@ -209,7 +278,7 @@ canvas.addEventListener("mousedown", (e) => {
       } else {
         lineSize = bigStroke;
       }
-      currentLine = new MarkerLine({ x: e.offsetX, y: e.offsetY }, lineSize);
+      currentLine = new MarkerLine({ x: e.offsetX, y: e.offsetY }, lineSize, selectedColor);
     }
   }
   lines.push(currentSticker ?? currentLine); // Use the current sticker if available
@@ -254,7 +323,15 @@ function redraw() {
   // ctx null check
   if (ctx) {
     ctx.clearRect(zero, zero, canvas.width, canvas.height);
-    lines.forEach((line) => line.display(ctx));
+    lines.forEach((line) => {
+      if (line instanceof MarkerLine) {
+        line.resetToOriginalColor(); // Reset to the original color
+        line.display(ctx);
+      } else {
+        line.display(ctx);
+      }
+    });
+    // lines.forEach((line) => line.display(ctx));
     if (cursorCommand) {
       cursorCommand.execute(ctx);
     }
