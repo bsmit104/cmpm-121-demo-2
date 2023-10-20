@@ -36,8 +36,8 @@ let currentTool = "thin"; // set default to thin
 const ctx = canvas.getContext("2d");
 
 // lines created w marker line class
-const lines: MarkerLine[] = [];
-const redoLines: MarkerLine[] = [];
+const lines: (MarkerLine | StickerCommand)[] = [];
+const redoLines: (MarkerLine | StickerCommand)[] = [];
 // let currentLine: MarkerLine | null = null;
 // const cursor = { active: false, x: 0, y: 0 };
 // const canvasEventTarget = new EventTarget();
@@ -47,6 +47,8 @@ function notify(name: string) {
 }
 
 let cursorCommand: CursorCommand | null = null;
+
+let currentSticker: StickerCommand | null = null;
 
 // heres a drawing-changed observer
 const bus = new EventTarget();
@@ -92,40 +94,88 @@ class MarkerLine {
 class CursorCommand {
   x: number;
   y: number;
-  constructor(x: number, y: number) {
+  s: string;
+  pos: { x: number; y: number}
+  constructor(x: number, y: number, s: string) {
     this.x = x;
     this.y = y;
+    this.s = s
+    this.pos = { x, y };
   }
   execute(ctx: CanvasRenderingContext2D) {
     if (ctx) {
-      if (lineSize === bigStroke) {
-        // Use a larger font size for the asterisk when using the "thick" tool
-        ctx.font = "30px monospace"; // Adjust the size as needed
-      } else {
-        // Use a smaller font size for the asterisk when using the "thin" tool
-        ctx.font = "10px monospace"; // Adjust the size as needed
+      if (this.s) {
+        ctx.font = "10px monospace";
+        ctx.fillText(this.s, this.x - 8, this.y + 16);
       }
-      ctx.fillText("*", this.x - 8, this.y + 16);
+      else {
+        if (lineSize === bigStroke) {
+          // Use a larger font size for the asterisk when using the "thick" tool
+          ctx.font = "30px monospace"; // Adjust the size as needed
+        } else {
+          // Use a smaller font size for the asterisk when using the "thin" tool
+          ctx.font = "10px monospace"; // Adjust the size as needed
+        }
+        ctx.fillText("*", this.x - 8, this.y + 16);
+      }
     }
   }
 }
 
-let currentLine: MarkerLine | null = null;
+//let cursorCommand: CursorCommand = new CursorCommand(0, 0, "");
+
+class StickerCommand {
+  x: number;
+  y: number;
+  s: string;
+  pos: { x: number; y: number };
+
+  constructor(x: number, y: number, s: string) {
+    this.x = x;
+    this.y = y;
+    this.s = s;
+    this.pos = { x, y };
+  }
+
+  display(ctx: CanvasRenderingContext2D) {
+    if (ctx) {
+      ctx.font = "30px sans-serif"; // Adjust the size as needed
+      ctx.fillText(this.s, this.pos.x, this.pos.y);
+    }
+  }
+  drag(x: number, y: number) {
+    this.pos = { x: x, y: y };
+  }
+}
+
+//let currentLine: MarkerLine | StickerCommand | null = null;
+let currentLine: MarkerLine | StickerCommand = new MarkerLine({ x: 0, y: 0 }, 0);
 
 canvas.addEventListener("mouseout", () => {
   cursorCommand = null;
+  currentSticker = null;
   notify("tool-changed");
 });
 
 canvas.addEventListener("mouseenter", (e) => {
   // Create the cursorCommand when the mouse enters the canvas
-  cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+  // if (cursorCommand) {
+  //   cursorCommand.pos = { x: e.offsetX, y: e.offsetY };
+  // }
+  cursorCommand = new CursorCommand(e.offsetX, e.offsetY, "");
   notify("tool-moved");
 });
 
 canvas.addEventListener("mousemove", (e) => {
   // Update the cursorCommand position
-  cursorCommand = new CursorCommand(e.offsetX, e.offsetY);
+  // if (cursorCommand) {
+  //   cursorCommand.pos = { x: e.offsetX, y: e.offsetY };
+  // }
+  cursorCommand = new CursorCommand(e.offsetX, e.offsetY, "");
+  if (currentSticker) {
+    // If a sticker is currently being moved, update its position
+    currentSticker.drag(e.offsetX, e.offsetY);
+  }
   notify("tool-changed");
   // "tool-moved" event
   //canvasEventTarget.dispatchEvent(new CustomEvent("tool-moved", { detail: { x: cursor.x, y: cursor.y } }));
@@ -139,23 +189,53 @@ canvas.addEventListener("mousemove", (e) => {
 });
 
 canvas.addEventListener("mousedown", (e) => {
-  // set line size
-  cursorCommand = null; //remove when draw
-  if (currentTool === "thin") {
-    lineSize = smallStroke;
-  } else {
-    lineSize = bigStroke;
+  if (cursorCommand && cursorCommand.s) {
+    currentSticker = new StickerCommand(e.offsetX, e.offsetY, cursorCommand.s);
   }
-  currentLine = new MarkerLine({ x: e.offsetX, y: e.offsetY }, lineSize);
-  lines.push(currentLine);
+  else {
+    //cursorCommand = null; //remove when draw
+    if (currentTool === "thin") {
+      lineSize = smallStroke;
+    } else {
+      lineSize = bigStroke;
+    }
+    currentLine = new MarkerLine({ x: e.offsetX, y: e.offsetY }, lineSize);
+  }
+  lines.push(currentSticker || currentLine); // Use the current sticker if available
   redoLines.length = nothing;
   //currentLine.drag(cursor.x, cursor.y);
   notify("drawing-changed");
 });
 
+// canvas.addEventListener("mousedown", (e) => {
+//   // set line size
+//   // if (cursorCommand && cursorCommand.s) {
+//     if (cursorCommand && cursorCommand.s) {
+//       currentSticker = new StickerCommand(e.offsetX, e.offsetY, cursorCommand.s);
+//     } else {
+//       cursorCommand = null; //remove when draw
+//       if (currentTool === "thin") {
+//         lineSize = smallStroke;
+//       } else {
+//         lineSize = bigStroke;
+//       }
+//     currentLine = new MarkerLine({ x: e.offsetX, y: e.offsetY }, lineSize);
+//       currentSticker = null;
+//     }
+//   lines.push(currentLine);
+//   redoLines.length = nothing;
+//   //currentLine.drag(cursor.x, cursor.y);
+//   notify("drawing-changed");
+// });
+
 canvas.addEventListener("mouseup", () => {
-  currentLine = null;
+  // currentLine = null;
   // redraw();
+  if (currentSticker) {
+    // If a sticker was being placed, set currentSticker to null
+    currentSticker = null;
+  }
+  //currentLine = null as unknown as MarkerLine | StickerCommand;
   notify("drawing-changed");
 });
 
@@ -166,6 +246,9 @@ function redraw() {
     lines.forEach((line) => line.display(ctx));
     if (cursorCommand) {
       cursorCommand.execute(ctx);
+    }
+    if (currentSticker) {
+      currentSticker.display(ctx);
     }
   }
 }
@@ -231,6 +314,14 @@ const thickToolButton = document.createElement("button");
 thickToolButton.innerHTML = "thick";
 container2.append(thickToolButton);
 
+const lineButton = document.createElement("button");
+lineButton.innerHTML = "Pen";
+container2.append(lineButton);
+
+lineButton.addEventListener("click", () => {
+  cursorCommand!.s = "";
+});
+
 thinToolButton.addEventListener("click", () => {
   currentTool = "thin";
   thinToolButton.classList.add("selectedTool");
@@ -250,3 +341,45 @@ thickToolButton.addEventListener("click", () => {
   //   ctx.fillText("*", this.x - 8, this.y + 16);
   // }
 });
+
+const container3 = document.createElement("div");
+app.append(container3);
+
+// container 2 so buttons are below other buttons
+const stickers = ["🎃", "👽", "👻", "🤡", "🐷", "🐛"];
+for (const sticker of stickers) {
+  const stickerButton = document.createElement("button");
+  stickerButton.className = "sticker-button";
+  stickerButton.type = "button";
+  stickerButton.innerHTML = sticker; // Display the sticker as the button label
+
+  // Event listener for each button
+  stickerButton.addEventListener("click", (e) => {
+    // Implement the command pattern for sticker placement
+    const stickerCommand = new StickerCommand(e.offsetX, e.offsetY, sticker);
+    currentSticker = stickerCommand;
+    if (ctx) {
+      stickerCommand.display(ctx);
+    }
+    lines.push(stickerCommand);
+    notify("drawing-changed");
+  });
+
+  // Append the button to the container
+  container3.append(stickerButton);
+}
+// for (const item of stickers) {
+//   const stickerButton = document.createElement("button");
+//   stickerButton.className = "upgrade-button";
+//   stickerButton.type = "button";
+//   stickerButton.innerHTML = "sticker";
+
+//   // event listener for each button
+//   stickerButton.addEventListener("click", () => {
+//     cursorCommand!.sticker = stickers[i];
+//   });
+
+//   // reference to the itemUpgradeButton
+//   itemButtons.push(stickerButton);
+//   app.append(stickerButton);
+// }
