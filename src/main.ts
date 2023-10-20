@@ -345,20 +345,19 @@ thickToolButton.addEventListener("click", () => {
   // }
 });
 
+// container 3 so buttons are below other buttons
 const container3 = document.createElement("div");
 app.append(container3);
 
-// container 2 so buttons are below other buttons
+// sticker buttons
 const stickers = ["🎃", "👽", "👻", "🤡", "🐷", "🐛"];
 for (const sticker of stickers) {
   const stickerButton = document.createElement("button");
   stickerButton.className = "sticker-button";
   stickerButton.type = "button";
-  stickerButton.innerHTML = sticker; // Display the sticker as the button label
+  stickerButton.innerHTML = sticker;
 
-  // Event listener for each button
   stickerButton.addEventListener("click", (e) => {
-    // Implement the command pattern for sticker placement
     const stickerCommand = new StickerCommand(e.offsetX, e.offsetY, sticker);
     currentSticker = stickerCommand;
     if (ctx) {
@@ -375,7 +374,8 @@ for (const sticker of stickers) {
 let isPlacingCustomSticker = false;
 let customStickerContent = "";
 
-// Function to create a custom sticker
+// create custom sticker
+// asked chat gpt for examples
 function createCustomSticker() {
   if (isPlacingCustomSticker) {
     return; // Return if already placing a sticker
@@ -390,10 +390,8 @@ function createCustomSticker() {
     isPlacingCustomSticker = true;
     canvas.style.cursor = "crosshair"; // Change the cursor style
 
-    // Listen for mousemove event to update the custom sticker's position
     canvas.addEventListener("mousemove", stickerPlacementHandler);
 
-    // Inform the user to click on the canvas to place the sticker
     alert("Click on the canvas to place the custom sticker.");
   }
 }
@@ -404,7 +402,7 @@ function stickerPlacementHandler(e: MouseEvent) {
     redraw();
 
     if (e.buttons === 1) {
-      // If the mouse button is clicked, place the sticker
+      // place the sticker on click
       const x = e.offsetX;
       const y = e.offsetY;
       const stickerContent = customStickerContent;
@@ -421,10 +419,49 @@ function stickerPlacementHandler(e: MouseEvent) {
 
 const container4 = document.createElement("div");
 app.append(container4);
-// Create a button for creating a custom sticker
+
+// custom sticker
 const customStickerButton = document.createElement("button");
 customStickerButton.innerHTML = "Create Custom Sticker (double click to place)";
 container4.append(customStickerButton);
 
-// Add a click event listener to the custom sticker button
 customStickerButton.addEventListener("click", createCustomSticker);
+
+function exportCanvas() {
+  const exportCanvas = document.createElement("canvas");
+  const scaleFactor = 4; // Scale factor
+  exportCanvas.width = canvasWidth * scaleFactor;
+  exportCanvas.height = canvasHeight * scaleFactor;
+  const exportCtx = exportCanvas.getContext("2d");
+
+  // white background
+  if (exportCtx) {
+    exportCtx.fillStyle = "white";
+    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    exportCtx.scale(scaleFactor, scaleFactor);
+  }
+
+  lines.forEach((item) => {
+    if (item instanceof StickerCommand || item instanceof MarkerLine) {
+      if (exportCtx) {
+        item.display(exportCtx);
+      }
+    }
+  });
+
+  // Convert to PNG image
+  const exportDataUrl = exportCanvas.toDataURL("image/png");
+
+  // download link and download
+  const a = document.createElement("a");
+  a.href = exportDataUrl;
+  a.download = "exported_canvas.png";
+  a.click();
+}
+
+// export button
+const exportButton = document.createElement("button");
+exportButton.innerHTML = "Export";
+container2.append(exportButton);
+
+exportButton.addEventListener("click", exportCanvas);
