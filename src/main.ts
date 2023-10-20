@@ -9,7 +9,7 @@ document.title = gameName;
 // no magic numbers *eyebrow raise*
 const canvasWidth = 500;
 const canvasHeight = 256;
-const nothing = 0;
+const zero = 0;
 const one = 1;
 let lineSize = 2;
 const smallStroke = 2;
@@ -91,7 +91,7 @@ class MarkerLine {
         ctx.strokeStyle = "black";
         ctx.lineWidth = this.lineWidth;
         ctx.beginPath();
-        const { x, y } = this.points[0];
+        const { x, y } = this.points[zero];
         ctx.moveTo(x, y);
         for (const { x, y } of this.points) {
           ctx.lineTo(x, y);
@@ -159,7 +159,7 @@ class StickerCommand {
 }
 
 //let currentLine: MarkerLine | StickerCommand | null = null;
-let currentLine: MarkerLine | StickerCommand = new MarkerLine({ x: 0, y: 0 }, 0);
+let currentLine: MarkerLine | StickerCommand = new MarkerLine({ x: 0, y: 0 }, zero);
 
 canvas.addEventListener("mouseout", () => {
   cursorCommand = null;
@@ -190,7 +190,7 @@ canvas.addEventListener("mousemove", (e) => {
   // "tool-moved" event
   //canvasEventTarget.dispatchEvent(new CustomEvent("tool-moved", { detail: { x: cursor.x, y: cursor.y } }));
 
-  if (e.buttons == 1 && currentLine) {
+  if (e.buttons == one && currentLine) {
     cursorCommand = null; //remove when draw
     currentLine.drag(e.offsetX, e.offsetY);
     redraw();
@@ -213,7 +213,7 @@ canvas.addEventListener("mousedown", (e) => {
     }
   }
   lines.push(currentSticker ?? currentLine); // Use the current sticker if available
-  redoLines.length = nothing;
+  redoLines.length = zero;
   //currentLine.drag(cursor.x, cursor.y);
   notify("drawing-changed");
 });
@@ -253,7 +253,7 @@ canvas.addEventListener("mouseup", () => {
 function redraw() {
   // ctx null check
   if (ctx) {
-    ctx.clearRect(nothing, nothing, canvas.width, canvas.height);
+    ctx.clearRect(zero, zero, canvas.width, canvas.height);
     lines.forEach((line) => line.display(ctx));
     if (cursorCommand) {
       cursorCommand.execute(ctx);
@@ -268,14 +268,14 @@ document.body.append(document.createElement("br"));
 
 // clear button
 createButton(container, "clear", () => {
-  lines.length = nothing;
+  lines.length = zero;
   redraw();
   notify("drawing-changed");
 });
 
 // undo button
 createButton(container, "undo", () => {
-  if (lines.length > nothing) {
+  if (lines.length > zero) {
     const poppedLine = lines.pop();
     if (poppedLine) {
       redoLines.push(poppedLine);
@@ -287,7 +287,7 @@ createButton(container, "undo", () => {
 
 // redo button
 createButton(container, "redo", () => {
-  if (redoLines.length > nothing) {
+  if (redoLines.length > zero) {
     const poppedRedoLine = redoLines.pop();
     if (poppedRedoLine) {
       lines.push(poppedRedoLine);
@@ -397,7 +397,7 @@ function stickerPlacementHandler(e: MouseEvent) {
     cursorCommand = new CursorCommand(e.offsetX, e.offsetY, "");
     redraw();
 
-    if (e.buttons === 1) {
+    if (e.buttons === one) {
       // place the sticker on click
       const x = e.offsetX;
       const y = e.offsetY;
@@ -433,7 +433,7 @@ function exportCanvas() {
   // white background
   if (exportCtx) {
     exportCtx.fillStyle = "white";
-    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+    exportCtx.fillRect(zero, zero, exportCanvas.width, exportCanvas.height);
     exportCtx.scale(scaleFactor, scaleFactor);
   }
 
