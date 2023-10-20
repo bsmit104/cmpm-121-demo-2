@@ -58,8 +58,13 @@ body {
 }
 
 h1 {
-  font-size: 3.2em;
+  font-size: 4.2em;
   line-height: 1.1;
+  font-family: 'Nosifer', cursive;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #28ff3a;
+  text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
 }
 
 #app {

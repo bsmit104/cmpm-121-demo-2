@@ -15,6 +15,14 @@ let lineSize = 2;
 const smallStroke = 2;
 const bigStroke = 5;
 
+const createButton = (container: HTMLElement, text: string, clickHandler: () => void) => {
+  const button = document.createElement("button");
+  button.innerHTML = text;
+  container.appendChild(button);
+  button.addEventListener("click", clickHandler);
+  return button;
+};
+
 // make container for aesthetics
 const container0 = document.createElement("div");
 app.append(container0);
@@ -259,44 +267,28 @@ function redraw() {
 document.body.append(document.createElement("br"));
 
 // clear button
-const clearButton = document.createElement("button");
-clearButton.innerHTML = "clear";
-container.append(clearButton);
-
-clearButton.addEventListener("click", () => {
+createButton(container, "clear", () => {
   lines.length = nothing;
-  redraw(); //potentially delete
+  redraw();
   notify("drawing-changed");
 });
 
 // undo button
-const undoButton = document.createElement("button");
-undoButton.innerHTML = "undo";
-container.append(undoButton);
-
-undoButton.addEventListener("click", () => {
+createButton(container, "undo", () => {
   if (lines.length > nothing) {
-    // popped line to the redo stack
     const poppedLine = lines.pop();
-    // empty stack check
     if (poppedLine) {
       redoLines.push(poppedLine);
-      redraw(); //cld delete
+      redraw();
       notify("drawing-changed");
     }
   }
 });
 
 // redo button
-const redoButton = document.createElement("button");
-redoButton.innerHTML = "redo";
-container.append(redoButton);
-
-redoButton.addEventListener("click", () => {
+createButton(container, "redo", () => {
   if (redoLines.length > nothing) {
-    // popped redo line to the display list
     const poppedRedoLine = redoLines.pop();
-    // empty stack check
     if (poppedRedoLine) {
       lines.push(poppedRedoLine);
       redraw();
@@ -309,13 +301,17 @@ redoButton.addEventListener("click", () => {
 const container2 = document.createElement("div");
 app.append(container2);
 
-const thinToolButton = document.createElement("button");
-thinToolButton.innerHTML = "thin";
-container2.append(thinToolButton);
+const thinToolButton = createButton(container2, "thin", () => {
+  currentTool = "thin";
+  thinToolButton.classList.add("selectedTool");
+  thickToolButton.classList.remove("selectedTool");
+});
 
-const thickToolButton = document.createElement("button");
-thickToolButton.innerHTML = "thick";
-container2.append(thickToolButton);
+const thickToolButton = createButton(container2, "thick", () => {
+  currentTool = "thick";
+  thickToolButton.classList.add("selectedTool");
+  thinToolButton.classList.remove("selectedTool");
+});
 
 const lineButton = document.createElement("button");
 lineButton.innerHTML = "Pen";
